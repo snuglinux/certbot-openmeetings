@@ -1,0 +1,301 @@
+#! /bin/bash
+
+lang=`echo $LANG | cut -b 1,2`
+
+#======================================================================
+show_message() {
+
+case $1 in
+##############
+SHOW_USAGE)############################################################
+##############
+case $lang in
+
+ru)
+cat <<EOFUSAGE
+certbot-openmeetings - Скрипт для автоматизации обновлений SSL-сертификатов с помощью Certbot
+
+Используются следующие опции командной строки:
+				
+ -v --version : Версия скрипта.
+				
+ -h --help: Показать справку и выйти.
+				
+Пример: certbot-openmeetings -v
+
+EOFUSAGE
+;;
+
+uk)
+cat <<EOFUSAGE
+certbot-openmeetings - Скрипт для автоматизації оновлень SSL-сертифікатів з підтримкою Certbot
+
+Використовуються наступні опції командного рядка:
+				
+ -v --version : Версія скрипта.
+				
+ -h --help : Показати довідку і вийти.
+				
+Приклад: certbot-openmeetings -v
+
+EOFUSAGE
+;;
+
+*)
+cat << EOFUSAGE
+certbot-openmeetings - Script to automate SSL certificate updates using Certbot
+
+Use the following command line options:
+				
+ -v --version : Version of the script.
+				
+ -h --help : Show help and exit.
+				
+Example: huawei-umnc -sc enp3s0
+
+EOFUSAGE
+;;
+esac
+;;
+
+#############
+CURRENT_VERSION)
+#############
+case $lang in
+  ru) echo -e "Версия скрипта ${FC_4}${CURRENT_VERSION}${FC_0}";;
+  uk) echo -e "Версія скрипта ${FC_4}${CURRENT_VERSION}${FC_0}";;
+  *)  echo -e "Script version ${FC_4}${CURRENT_VERSION}${FC_0}";;
+esac
+;;
+
+################
+FILE_NOT_FOUND*)#######################################################
+################
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Файл ${FC_3}$2${FC_0} не найден!";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Файл ${FC_3}$2${FC_0} не знайдено!";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} File ${FC_3}$2${FC_0} not found!";;
+esac
+;;
+
+###############
+UNKNOWN_ARG)##########################################################
+###############
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Неизвестный аргумент ${FC_3}$2${FC_0}";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Невідомий аргумент ${FC_3}$2${FC_0}";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} Unknown argement ${FC_3}$2${FC_0}";;
+esac
+;;
+
+###############
+VAR_NOT_SET*)##########################################################
+###############
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Переменная ${FC_3}$2${FC_0} не установлена";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Змінна ${FC_3}$2${FC_0} не встановлена";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} Variable ${FC_3}$2${FC_0} not set";;
+esac
+;;
+
+###########
+WORK_DIR)##############################################################
+###########
+case $lang in
+  ru) echo -e "Изменение рабочей директории на ${FC_3}$2${FC_0}";;
+  uk) echo -e "Зміна робочої директорії на ${FC_3}$2${FC_0}";;
+  *)  echo -e "Changing working dir to ${FC_3}$2${FC_0}";;
+esac
+;;
+
+###########
+BT_DIR_NOT_WRITABLE)##############################################################
+###########
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Временная директория ${FC_3}$2${FC_0} не доступна для записи";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Тимчасова директорія ${FC_3}$2${FC_0} не доступна для запису";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} Temp directory ${FC_3}$2${FC_0} is not writable";;
+esac
+;;
+
+############
+YES_OR_NO)##############################################################i
+###########
+case $lang in
+  ru) echo -e "Введите ${FC_3}yes${FC_0} или ${FC_3}no${FC_0}";;
+  uk) echo -e "Введіть ${FC_3}yes${FC_0} или ${FC_3}no${FC_0}";;
+  *)  echo -e "Please enter ${FC_3}yes${FC_0} or ${FC_3}no${FC_0}";;
+esac
+;;
+
+##########
+WRITING_TO*)##############################################################i
+############
+case $lang in
+  ru) echo -e "Файл записан в директорию ${FC_3}$2${FC_0}";;
+  uk) echo -e "Файл записаний в директорію ${FC_3}$2${FC_0}";;
+  *)  echo -e "File be written in ${FC_3}$2${FC_0}";;
+esac
+;;
+
+##########
+OVERWRITE_FILE*)###################################################
+############
+case $lang in
+  ru) echo -e "Перезаписать файл ${FC_3}$2${FC_0}?";;
+  uk) echo -e "Перезаписати файл ${FC_3}$2${FC_0}?";;
+  *)  echo -e "Overwrite the file ${FC_3}$2${FC_0}?";;
+esac
+;;
+
+##########
+FAILED_TO_CREATE_DIR*)###################################################
+############
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Не удалось создать каталог ${FC_3}$2${FC_0}";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Не вдалося створити каталог ${FC_3}$2${FC_0}";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} Failed to create directory ${FC_3}$2${FC_0}";;
+esac
+;;
+
+##########
+NOT_FOUND_CONFIG*)###################################################
+############
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Не найден конфигурационный файл ${FC_3}$2${FC_0}";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Не знайдено конфігураційний файл ${FC_3}$2${FC_0}";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} Not found config file ${FC_3}$2${FC_0}";;
+esac
+;;
+
+##########
+NOT_SPECIFIED_PARAMETER*)###################################################
+############
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Не указан параметр ${FC_3}$2${FC_0}";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Не вказано параметр ${FC_3}$2${FC_0}";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} Not specified parameter ${FC_3}$2${FC_0}";;
+esac
+;;
+
+#############
+DIRECTORY_NOT_FOUND*)
+#############
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Каталог ${FC_3}$2${FC_0} не найден";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Каталог ${FC_3}$2${FC_0} не знайдено";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} Directory ${FC_3}$2${FC_0} not found";;
+esac
+;;
+
+################
+FILE_NOT_FOUND*)
+################
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Файл ${FC_2}$2${FC_0} не найден";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Файл ${FC_2}$2${FC_0} не знайдено";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} File ${FC_2}$2${FC_0} not found";;
+esac
+;;
+
+################
+PING_HOST*)
+################
+case $lang in
+  ru) echo -e "Проверка доступности хоста: ${FC_3}$2${FC_0}";;
+  uk) echo -e "Перевірка доступності хоста: ${FC_3}$2${FC_0}";;
+  *)  echo -e "Check host availability: ${FC_3}$2${FC_0}";;
+esac
+;;
+
+################
+NOT_ACCESS_HOST*)
+################
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Не удается получить доступ к хосту ${FC_3}$2${FC_0}";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Неможливо отримати доступ до хосту ${FC_3}$2${FC_0}";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} Can not access the host ${FC_3}$2${FC_0}";;
+esac
+;;
+
+################
+OK)
+################
+case $lang in
+  ru) echo -e "${FC_4}... хорошо${FC_0}";;
+  uk) echo -e "${FC_4}... добре${FC_0}";;
+  *)  echo -e "${FC_4}... OK${FC_0}";;
+esac
+;;
+
+################
+PACKAGE_NOT_INSTALLED*)
+################
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Пакет ${FC_4}$2${FC_0} не установлен!";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Пакет ${FC_4}$2${FC_0} не встановлений!";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} Package of ${FC_4}$2${FC_0} is not installed!";;
+esac
+;;
+
+################
+FAILED_EXECUTE_COMMAND*)
+################
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_4} Не удалось выполнить команду ${FC_3}$2${FC_0}";;
+  uk) echo -e "${FC_2}Помилка:${FC_4} Не вдалося виконати команду ${FC_3}$2${FC_0}";;
+  *)  echo -e "${FC_2}ERROR:${FC_4} Failed to execute the command ${FC_3}$2${FC_0}";;
+esac
+;;
+
+################
+NOT_RIGHT_VALUE)
+################
+case $lang in
+  ru) echo -e "${FC_2}Значение указано не верно!${FC_0}";;
+  uk) echo -e "${FC_2}Значення вказано не вірно!${FC_0}";;
+  *)  echo -e "${FC_2}The value is not correct!${FC_0}";;
+esac
+;;
+
+################
+I_M_NOT_ROOT)
+################
+case $lang in
+  ru) echo -e "${FC_2}Ошибка:${FC_0} Необходимы права суперпользователя (root)";;
+  uk) echo -e "${FC_2}Помилка:${FC_0} Необхідні права суперкористувача (root)";;
+  *)  echo -e "${FC_2}ERROR:${FC_0} You need to be (root)";;
+esac;;
+
+################
+CONTINUE_PRESS_ANY_KEY)
+################
+case $lang in
+  ru) echo -e "${FC_4}Для продолжения нажмите любую клавишу${FC_0}";;
+  uk) echo -e "${FC_4}Для продовження натисніть будь-яку клавішу${FC_0}";;
+  *)  echo -e "${FC_4}To continue, press any key${FC_0}";;
+esac;;
+
+################
+COMMAND_COMPLETED_SUCCESSFULLY*)
+################
+case $lang in
+  ru) echo -e "${FC_3}Команда ${FC_3}$2${FC_0} успешно выполнена${FC_0}";;
+  uk) echo -e "${FC_3}Команда ${FC_3}$2${FC_0} успішно виконана${FC_0}";;
+  *)  echo -e "${FC_3}Command ${FC_3}$2${FC_0} completed successfully${FC_0}";;
+esac;;
+
+################
+FAILED_PLAY_SOUND_EVENT)
+################
+case $lang in
+  ru) echo -e "Не удалось воспроизвести звуковое событие ${FC_3}$2${FC_0}";;
+  uk) echo -e "Не вдалося відтворити звукову подію ${FC_3}$2${FC_0}";;
+  *)  echo -e "Failed to play sound event ${FC_3}$2${FC_0}";;
+esac;;
+
+*)
+echo -e "Unknown string $1";
+exit 1
+esac
+}

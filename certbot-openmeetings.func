@@ -1,0 +1,149 @@
+#! /bin/bash
+
+#=======================================
+# Убрать из лога color scheme
+# Strip escape codes/sequences [$1: input, $2: target variable]
+function strip_escape_codes() {
+   local input="${1//\"/\\\"}" output="" i char within_code=0
+   for ((i=0; i < ${#input}; ++i)); do
+       # get current character
+       char="${input:i:1}"
+       # if we're currently within an escape code, check if end of
+       if (( ${within_code} == 1 )); then
+          # code is reached, i.e. if current character is a letter
+          case "${char}" in
+             [a-zA-Z]) within_code=0 ;;
+          # we're no longer within an escape code
+          esac
+             continue
+       fi
+       # if current character is '\e', we've reached an escape code
+       if [[ "${char}" == $'\e' ]]; then
+          # now we're within an escape code
+          within_code=1
+          continue
+       fi
+       # if none of the above applies, add current character to output
+       output+="${char}"
+   done
+   # assign output to target variable
+   eval "$2=\"${output}\""
+}
+
+#=======================================
+show_message_log(){
+  if ! [ -d ${LOG_PATH} ]; then
+     mkdir ${LOG_PATH}
+  fi
+  strip_escape_codes "$(show_message $*)" stripped
+  echo "$(date +%k:%M:%S): $stripped" >> ${LOG_PATH}/$(date +%Y.%m.%d)-${BASE_NAME}.log
+  show_message $*
+}
+
+#=======================================
+echo_log(){
+  if ! [ -d ${LOG_PATH} ]; then
+     mkdir ${LOG_PATH}
+  fi
+  strip_escape_codes "$*" stripped
+  echo "$(date +%k:%M:%S): $stripped" >> ${LOG_PATH}/$(date +%Y.%m.%d)-${BASE_NAME}.log
+  echo -e $*
+}
+
+#=======================================
+system_language() {
+  local UP_LANG_SELECT LANG_UTF8 STR_READ
+
+  PATH_INST=$1
+
+  if ! [ -f ~/.config/lang.conf  ]; then
+     while [ "${LIST_LANG}" = "${LIST_LANG#*$LANG_SELECT}" ] ; do
+           STR_READ=`echo "$(tput bold)$(tput setaf 2)Specify the required language: $(tput setaf 1) ${LIST_LANG} $(tput sgr0)"`
+           read -p "${STR_READ}" LANG_SELECT
+           if [ "${LIST_LANG}" = "${LIST_LANG#*$LANG_SELECT}" ]; then
+              echo "Incorrect value"
+           else
+              echo -e "LANG_SELECT=${LANG_SELECT}" > ~/.config/lang.conf
+              echo "OK"
+           fi
+     done
+  fi
+  source ~/.config/lang.conf
+}
+
+#===============================================
+# Для озвучивания событий
+sound_events() {
+   SOUND_EVENT=$1
+   if [ "${USE_SOUND}" != "1" ]; then
+     return 0
+   fi
+   if ! [ -d ${SOUND_DIR}/${AUDIO_THEME}/${lang} ]; then
+     show_message_log DIRECTORY_NOT_FOUND ${SOUND_DIR}/${AUDIO_THEME}/${lang}
+     return 1
+   fi
+   # Установка громкости звука
+   amixer set Master ${SOUND_LEVEL}% unmute
+   aplay -D ${DEVICE_NAME} ${SOUND_DIR}/${AUDIO_THEME}/${lang}/${SOUND_EVENT}.wav
+   if [ "$?" = 1 ]; then
+      show_message_log FAILED_PLAY_SOUND_EVENT
+      return 1;
+   else
+      return 0;
+   fi
+}
+
+#========================
+set_options(){
+  while [ ! -z "$1" ]; do
+        case $1 in
+             -v)
+                show_message CURRENT_VERSION
+                exit 0
+                ;;
+             -h|--help)
+                show_message SHOW_USAGE
+                exit 0
+                ;;
+             *) show_message UNKNOWN_ARG $1
+                exit 1
+               ;;
+        esac
+        shift
+  done
+}
+
+#========================
+pkcs12(){
+  openssl pkcs12 -export -passout pass:$PASSW -in /etc/letsencrypt/live/$DOMAIN/fullchain.pem -inkey /etc/letsencrypt/live/$DOMAIN/privkey.pem -out openmeetings-cert.p12 -name openmeetings
+  if [ $? = 0 ]; then
+    show_message_log COMMAND_COMPLETED_SUCCESSFULLY pkcs12
+  else
+     show_message_log FAILED_EXECUTE_COMMAND pkcs12
+     exit 1
+  fi
+}
+
+#========================
+delete_keystore(){
+  if [ -f /opt/openmeetings/conf/$DOMAIN.jks ]; then
+     keytool -delete -keystore /opt/openmeetings/conf/$DOMAIN.jks -alias openmeetings -storepass $PASSW -noprompt
+     if [ $? = 0 ]; then
+       show_message_log COMMAND_COMPLETED_SUCCESSFULLY delete_keystore
+     else
+       show_message_log FAILED_EXECUTE_COMMAND delete_keystore
+       exit 1
+     fi
+  fi
+}
+
+#========================
+jks(){
+  keytool -importkeystore -deststorepass $PASSW -destkeypass $PASSW -srcstorepass $PASSW -destkeystore /opt/openmeetings/conf/$DOMAIN.jks -srckeystore openmeetings-cert.p12 -srcstoretype PKCS12 -alias openmeetings
+  if [ $? = 0 ]; then
+    show_message_log COMMAND_COMPLETED_SUCCESSFULLY jks
+  else
+     show_message_log FAILED_EXECUTE_COMMAND jks
+     exit 1
+  fi
+}

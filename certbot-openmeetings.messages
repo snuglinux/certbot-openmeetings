@@ -51,7 +51,7 @@ Use the following command line options:
 				
  -h --help : Show help and exit.
 				
-Example: huawei-umnc -sc enp3s0
+Example: certbot-openmeetings -v
 
 EOFUSAGE
 ;;
